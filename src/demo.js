@@ -25,6 +25,7 @@ function effect (fn, options = {}) {
   effectFn()
 }
 
+
 function cleanup (effectFn) {
   // 遍历 effectFn.deps 数组
   for (let i = 0; i < effectFn.deps.length; i++) {
@@ -105,6 +106,7 @@ function flushJog () {
 effect(() => {
   console.log(obj.foo)
 }, {
+
   scheduler(fn) {
     jobQueue.add(fn)
     flushJog()
