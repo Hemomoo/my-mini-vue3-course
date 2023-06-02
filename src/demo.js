@@ -42,7 +42,19 @@ function track (target, key) {
   // 没有 activeEffect 直接  return
   if (!activeEffect) return
   let desMap = bucket.get(target)
+  
   if (!desMap) {
+    /*
+      1. 新建Map 用来存储 key ---> effect 
+      2. 整个bucket 得结构  
+      bucket = {
+          // desMap  是proxyData 对象 map 可以用对象做值
+          desMap：{
+            // deps 是proxy对象得key,data.foo 中得foo    用到了set得去重功能 
+            deps:  { effectFn,effectFn,effectFn} // 包装过后得effect函数  deps中记录所有这个value得effect 
+        }
+      }
+    */ 
     desMap = new Map()
     bucket.set(target, desMap)
   }
@@ -58,10 +70,13 @@ function track (target, key) {
   activeEffect.deps.push(deps)
 }
 
+
+// 触发
 function trigger (target, key) {
   const desMap = bucket.get(target)
   if (!desMap) return
   const effects = desMap.get(key)
+  console.log('effects: ', effects);
   const effectToRun = new Set(effects)
   effectToRun.forEach(effectFn => {
     if (effectFn.options.scheduler) {
@@ -96,6 +111,7 @@ let isFlushing = false
 function flushJog () {
   if (isFlushing) return
   isFlushing = true
+  // 将所有的effect 函数放入微任务中 同个值得修改所有effect 同步执行 从而优化渲染
   p.then(() => {
     jobQueue.forEach(job => job())
   }).finally(() => {
@@ -115,3 +131,15 @@ effect(() => {
 
 obj.foo++
 obj.foo++
+
+
+effect(() => {
+  console.log(obj.foo, '你好')
+  console.log("effect trigger");
+}, {
+  scheduler(fn) {
+    jobQueue.add(fn)
+    flushJog()
+  }
+})
+
