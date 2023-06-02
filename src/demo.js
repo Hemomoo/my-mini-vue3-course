@@ -9,7 +9,7 @@ const effectStack = []
 
 function effect (fn, options = {}) {
   const effectFn = () => {
-    console.log('effectFn执行了')
+    // console.log('effectFn执行了')
     cleanup(effectFn)
     // 当调用副作用函数之前将当前副作用函数压入栈中
     activeEffect = effectFn
@@ -107,6 +107,10 @@ function flushJog () {
   })
 }
 
+
+/*
+  1. 
+*/
 function computed (getter) {
   let value
   let dirty = true
@@ -116,11 +120,13 @@ function computed (getter) {
     scheduler() {
       if (!dirty) {
         dirty = true
+        // 
         trigger(obj, 'value')
       }
   
     }
   })
+  // 获取value 值得时候回
   const obj = {
     // 当读取 value 时执行 effectFn
     get value() {
@@ -135,6 +141,8 @@ function computed (getter) {
   return obj
 }
 
+
+// 如果是对象就get所有的key 触发响应式 
 function traverse (value, seen = new Set()) {
   if (typeof value !== 'object' || value === null || seen.has(value)) return
   seen.add(value)
@@ -144,6 +152,7 @@ function traverse (value, seen = new Set()) {
   return value
 }
 
+// source 需要监听的值，需要是一个方法，或则对象。因为effect的第一次参数是函数，cb得回调函数
 function watch(source, cb) {
   let getter
   let newValue
@@ -151,17 +160,32 @@ function watch(source, cb) {
   if (typeof source === 'function') {
     getter = source
   } else {
+    // 如果是对象就需要便利所有的值存入
     getter = () => traverse(source)
   }
+  //  get的数据的时候， 搜集effect函数
   const effectFn = effect(()=> getter(), {
+    // 因为lazy 为 true 所以 effectFn 返回的是 effecth函数 而不是 计算的值
     lazy: true,
     scheduler() {
       newValue = effectFn()
-      cb(oldValue, newValue)
+      // 自己传入的回调函数。
+      cb(oldValue, newValue) // 一个闭包
       oldValue = newValue
+      console.log('oldValue1: ', oldValue);
     }
   })
+  /*
+    所以这个地方返回的是上个effect计算的值，
+    watch 需要是一个函数的原因
+    因为effect 是 get 函数所以这个返回的是oldValue
+  */ 
   oldValue = effectFn()
+  console.log('oldValue2: ', oldValue);
+  /*
+    oldValue2:  1
+    oldValue1:  2
+  */
 }
 
 watch(() => obj.foo, (newValue, oldValue) => {
