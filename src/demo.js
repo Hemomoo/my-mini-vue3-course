@@ -8,6 +8,7 @@ let activeEffect
 const effectStack = []
 
 function effect (fn, options = {}) {
+  // fn ---> getter 函数
   const effectFn = () => {
     cleanup(effectFn)
     // 当调用副作用函数之前将当前副作用函数压入栈中
@@ -22,10 +23,12 @@ function effect (fn, options = {}) {
   effectFn.options = options
   // activeEffect.deps 用来存储所有与该副作用函数相关的依赖集合
   effectFn.deps = []
+  // 如果lazy 为false 就立即执行 
   if (!options.lazy) {
     // 执行副作用函数
     effectFn()
   }
+  // 如果不是就返回 effectFn 包装对象
   return effectFn
 }
 
@@ -106,6 +109,7 @@ function flushJog () {
   })
 }
 
+// 计算属性
 function computed (getter) {
   // 把 getter 作为副作用函数，创建一个 lazy 的 effect
   const effectFn = effect(getter, {
