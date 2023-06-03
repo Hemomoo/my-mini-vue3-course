@@ -117,6 +117,7 @@ export function createReactive (obj, isShallow = false) {
       if (isShallow) {
         return res
       }
+      // 如果不是就递归调用reactive 来将对象的所有值变为响应式
       if (typeof res === 'object' && res !== null) {
         return reactive(res)
       }
