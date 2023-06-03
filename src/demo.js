@@ -65,10 +65,11 @@ function track(target, key) {
   activeEffect.deps.push(deps)
 }
 
+// 依赖触发
 function trigger(target, key, type) {
   const desMap = bucket.get(target)
   if (!desMap) return
-  // 取得与 key 相关联的副作用函数
+  // 取得与 key 相关联的副作用函数 这个key是对象 如果这个key 有ITERATE_KEY 表示它被for...in... 
   const effects = desMap.get(key)
   const iterateEffects = desMap.get(ITERATE_KEY)
   const effectToRun = new Set()
@@ -115,7 +116,7 @@ const px = new Proxy(obj, {
     return res
   },
   ownKeys(target) {
-    // 将副作用函数与 ITERATE_KEY关联
+    // 将副作用函数与 自定义的的symbol 关联
     track(target, ITERATE_KEY)
     return Reflect.ownKeys(target)
   },
