@@ -96,6 +96,7 @@ export function reactive (obj) {
   return new Proxy(obj, {
     // 拦截读取操作
     get(target, key, receiver) {
+      // 自己定义了一个key 值 如果读取的是raw 就返回被拦截的对象
       if (key === 'raw') {
         return target
       }
@@ -104,6 +105,7 @@ export function reactive (obj) {
       return Reflect.get(target, key, receiver)
     },
     set(target, key, newVal, receiver) {
+      console.log('receiver: ', receiver.raw);
       const oldVal = target[key]
       const type = Object.prototype.hasOwnProperty.call(target, key) ? TriggerType.Set : TriggerType.ADD
       // 设置属性值
