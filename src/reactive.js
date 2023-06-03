@@ -16,6 +16,7 @@ export function effect(fn, options = {}) {
     // 当调用副作用函数之前将当前副作用函数压入栈中
     activeEffect = effectFn
     effectStack.push(effectFn)
+    console.log('fn: ', fn);
     const res = fn()
     // 在当前副作用函数执行完毕后，将当前副作用函数弹出栈，并把 activeEffect 还原为之前的值
     effectStack.pop()
@@ -46,7 +47,7 @@ function cleanup(effectFn) {
 
 function track(target, key) {
   // 没有 activeEffect 直接  return
-  if (!activeEffect) return
+  if (!activeEffect || !shoulTrack) return
   let depsMap = bucket.get(target)
   if (!depsMap) {
     bucket.set(target, (depsMap = new Map()))
@@ -147,6 +148,21 @@ const arrayInstrumentations = {}
     return res
   }
 })
+
+// 新增加的code
+let shoulTrack = true
+;['push'].forEach((method)=>{
+  const originMethod = Array.prototype[method]
+  arrayInstrumentations[method] = function (...args){
+     shoulTrack = false
+     let res = originMethod.apply(this,args)
+     shoulTrack = true
+     return res
+  }
+})
+
+
+
 
 export function createReactive(obj, isShallow = false, isReadonly = false) {
   return new Proxy(obj, {
